@@ -118,8 +118,9 @@ int main(int argc, char *argv[])
 	QStringList imgurlList = scraper.scrapeImageOfKeyWord(keywords);
 
 	for(const QString &imgurl : imgurlList){
-		fprintf(stderr, "%s\n", imgurl.toLocal8Bit().constData());
+		fprintf(stdout, "%s\n", imgurl.toLocal8Bit().constData());
 	}
+	fflush(stdout);
 
 	qDebug("\nTotal %d images been scraped.\n", imgurlList.length());
 
