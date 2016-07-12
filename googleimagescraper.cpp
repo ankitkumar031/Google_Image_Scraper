@@ -65,11 +65,11 @@ QStringList GoogleImageScraper::scrapeImageOfKeyWord(const QString &keyWords)
 	view.setZoomFactor(0.25);
 
 	g_finished = 0;
-	while(g_finished <= 10){
+	while(g_finished <= 100){
 		g_compared = false;
 		view.page()->toHtml(htmlCompare);
 		while(!g_compared){
-			QTest::qWait(200);
+			QTest::qWait(100);
 		}
 	}
 
