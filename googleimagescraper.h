@@ -17,6 +17,12 @@ public:
 	bool safeModeOn() const;
 	void setSafeModeOn(bool safeModeOn);
 
+	bool faceOnly() const;
+	void setFaceOnly(bool faceOnly);
+
+	qint32 number() const;
+	void setNumber(const qint32 &number);
+
 private slots:
 
 private:
@@ -25,7 +31,9 @@ private:
 private:
 	QWebEngineView view;
 
-	bool _safeModeOn;
+	qint32 _number = -1;
+	bool _safeModeOn = false;
+	bool _faceOnly = false;
 };
 
 #endif // GOOGLEIMAGESCRAPER_H

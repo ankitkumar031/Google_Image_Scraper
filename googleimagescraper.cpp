@@ -2,18 +2,20 @@
 
 #include <QStringList>
 
-static bool g_finished;
+static qint32 g_finished;
 static bool g_compared;
 static QString g_html;
 
 void htmlCompare(const QString &html)
 {
 	g_compared = true;
-	if(g_html != html){
-		g_html = html;
-		return;
+	if(g_html == html){
+		g_finished++;
 	}
-	g_finished = true;
+	else{
+		g_html = html;
+		g_finished = 0;
+	}
 }
 
 GoogleImageScraper::GoogleImageScraper(QObject *parent) : QObject(parent)
@@ -23,25 +25,47 @@ GoogleImageScraper::GoogleImageScraper(QObject *parent) : QObject(parent)
 
 QStringList GoogleImageScraper::scrapeImageOfKeyWord(const QString &keyWords)
 {
-	QStringList listOfKeyWord = keyWords.split(' ');
-	QString queryStr = listOfKeyWord.join('+');
+	QString baseUrl = "https://www.google.com/search?tbm=isch";
 
-	QString baseUrl = "https://www.google.com/search?tbm=isch&q=";
+	QStringList listOfKeyword = keyWords.split(' ');
+	QString keywordsStr = QString("&q=") + listOfKeyword.join('+');
 
-	QUrl webUrl = QUrl(baseUrl + queryStr);
+	if(_number == -1){
+		fprintf(stderr, "Img number:\tNo limit\n");
+	}
+	else{
+		fprintf(stderr, "Img number:\t%d\n", _number);
+	}
 
-	qDebug() << "Query: " << webUrl;
+
+	if(_faceOnly){
+		baseUrl += "&tbs=itp:face";
+		fprintf(stderr, "Face only:\tYes\n");
+	}
+	else{
+		fprintf(stderr, "Face only:\tNo\n");
+	}
+
+	if(_safeModeOn){
+		baseUrl += "safe=on";
+		fprintf(stderr, "Safe mode:\tYes\n");
+	}
+	else{
+		fprintf(stderr, "Safe mode:\tNo\n");
+	}
+
+	QUrl queryUrl = QUrl(baseUrl + keywordsStr);
+
+	fprintf(stderr, "Scraping:\t%s\n\n", queryUrl.toString().toLocal8Bit().constData());
 
 	view.show();
 	view.resize(4000, 3000);
 	view.hide();
-	view.load(webUrl);
+	view.load(queryUrl);
 	view.setZoomFactor(0.25);
 
-	QTest::qWait(15000);
-
-	g_finished = false;
-	while(!g_finished){
+	g_finished = 0;
+	while(g_finished <= 10){
 		g_compared = false;
 		view.page()->toHtml(htmlCompare);
 		while(!g_compared){
@@ -49,7 +73,13 @@ QStringList GoogleImageScraper::scrapeImageOfKeyWord(const QString &keyWords)
 		}
 	}
 
-	return htmlResolve(g_html);
+	QStringList result = htmlResolve(g_html);
+
+	if(_number > 0  &&  _number < result.size()){
+		return result.mid(0, _number);
+	}
+
+	return result;
 }
 
 bool GoogleImageScraper::safeModeOn() const
@@ -82,4 +112,24 @@ QStringList GoogleImageScraper::htmlResolve(const QString html)
 	}
 
 	return hrefList;
+}
+
+qint32 GoogleImageScraper::number() const
+{
+	return _number;
+}
+
+void GoogleImageScraper::setNumber(const qint32 &number)
+{
+	_number = number;
+}
+
+bool GoogleImageScraper::faceOnly() const
+{
+	return _faceOnly;
+}
+
+void GoogleImageScraper::setFaceOnly(bool faceOnly)
+{
+	_faceOnly = faceOnly;
 }
