@@ -53,13 +53,13 @@ Options:
 	-h, --help                  Displays this help.
 	-v, --version               Displays version information.
 	-p, --proxy <type address>  Set application proxy, example: "socks5 127.0.0.1:1080"
-	-n, --number <num of imgs>	Output at most number of images
-	-f, --face_only				Search human face of keywords
-	-S, --safe_mode				Turn on google search safe mode
+	-n, --number <num of imgs>  Output at most number of images
+	-f, --face_only             Search human face of keywords
+	-S, --safe_mode             Turn on google search safe mode
 	-k, --keywords <keywords>   The keywords of images to scrape, example: "Yao Ming"
 )usage");
 
-	exit(0);
+	exit(-1);
 }
 
 int main(int argc, char *argv[])
@@ -95,6 +95,7 @@ int main(int argc, char *argv[])
 	if(parser.isSet(op_proxy)){
 		QString proxyStr = parser.value(op_proxy);
 		if(!setProxy(proxyStr)){
+			fprintf(stderr, "Error format of proxy: %s\n", proxyStr.toLocal8Bit().constData());
 			showUsage();
 		}
 	}
@@ -102,6 +103,7 @@ int main(int argc, char *argv[])
 	if(parser.isSet(op_number)){
 		qint32 number = parser.value(op_number).toInt();
 		if(number <= 0){
+			fprintf(stderr, "Error format of number: %d\n", number);
 			showUsage();
 		}
 		scraper.setNumber(number);
@@ -112,17 +114,21 @@ int main(int argc, char *argv[])
 
 	QString keywords = parser.value(op_keywords);
 	if(keywords.isEmpty()){
+		fprintf(stderr, "Keywords is empty!\n");
 		showUsage();
 	}
 
 	QStringList imgurlList = scraper.scrapeImageOfKeyWord(keywords);
 
-	for(const QString &imgurl : imgurlList){
-		fprintf(stdout, "%s\n", imgurl.toLocal8Bit().constData());
+	for(int i = 0; i < imgurlList.size(); i++){
+		fprintf(stdout, "%s\n", imgurlList.at(i).toLocal8Bit().constData());
+		fflush(stdout);
+		if((i % 20) == 0){
+			QTest::qWait(100);
+		}
 	}
-	fflush(stdout);
 
-	qDebug("\nTotal %d images been scraped.\n", imgurlList.length());
+	fprintf(stderr, "\nTotal %d images been scraped.\n", imgurlList.length());
 
 	return 0;
 }

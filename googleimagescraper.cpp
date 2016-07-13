@@ -1,6 +1,7 @@
 #include "googleimagescraper.h"
 
 #include <QStringList>
+#include <QDateTime>
 
 static qint32 g_finished;
 static bool g_compared;
@@ -20,15 +21,17 @@ void htmlCompare(const QString &html)
 
 GoogleImageScraper::GoogleImageScraper(QObject *parent) : QObject(parent)
 {
-
+//	view.setWindowFlags(Qt::FramelessWindowHint);
 }
 
-QStringList GoogleImageScraper::scrapeImageOfKeyWord(const QString &keyWords)
+QStringList GoogleImageScraper::scrapeImageOfKeyWord(const QString &keywords)
 {
 	QString baseUrl = "https://www.google.com/search?tbm=isch";
 
-	QStringList listOfKeyword = keyWords.split(' ');
+	QStringList listOfKeyword = keywords.split(' ');
 	QString keywordsStr = QString("&q=") + listOfKeyword.join('+');
+
+	fprintf(stderr, "Keywords:  \t%s\n", keywords.toLocal8Bit().constData());
 
 	if(_number == -1){
 		fprintf(stderr, "Img number:\tNo limit\n");
@@ -36,7 +39,6 @@ QStringList GoogleImageScraper::scrapeImageOfKeyWord(const QString &keyWords)
 	else{
 		fprintf(stderr, "Img number:\t%d\n", _number);
 	}
-
 
 	if(_faceOnly){
 		baseUrl += "&tbs=itp:face";
@@ -47,7 +49,7 @@ QStringList GoogleImageScraper::scrapeImageOfKeyWord(const QString &keyWords)
 	}
 
 	if(_safeModeOn){
-		baseUrl += "safe=on";
+		baseUrl += "&safe=on";
 		fprintf(stderr, "Safe mode:\tYes\n");
 	}
 	else{
@@ -56,10 +58,12 @@ QStringList GoogleImageScraper::scrapeImageOfKeyWord(const QString &keyWords)
 
 	QUrl queryUrl = QUrl(baseUrl + keywordsStr);
 
-	fprintf(stderr, "Scraping:\t%s\n\n", queryUrl.toString().toLocal8Bit().constData());
+	fprintf(stderr, "Scrape URL:\t%s\n\n", queryUrl.toString().toLocal8Bit().constData());
 
 	view.show();
-	view.resize(4000, 3000);
+//	view.setGeometry(4000, 4000, 4000, 1000);
+	view.setGeometry(2000, 0, 4000, 1000);
+	QTest::qWait(100);
 	view.hide();
 	view.load(queryUrl);
 	view.setZoomFactor(0.25);
